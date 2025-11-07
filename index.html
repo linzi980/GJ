@@ -1,0 +1,1590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>钢结构计算工具合集</title>
+    <style>
+        /* 全局样式 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e7f1 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* 导航栏样式 - 统一主色调 */
+        .navbar {
+            background-color: #04aa6d;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .nav-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-btn {
+            background-color: #04aa6d;
+            border: 1px solid #3e8e41;
+            color: white;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background-color: #3e8e41;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .nav-btn.active {
+            background-color: #2c3e50;
+            border-color: #2c3e50;
+        }
+
+        /* 页面容器样式 */
+        .page {
+            display: none;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* 工具卡片样式 */
+        .tool-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            border: 1px solid #e0e7ff;
+        }
+
+        .tool-card h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-size: 24px;
+        }
+
+        /* 输入框样式 */
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f9ff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #04aa6d;
+            box-shadow: 0 0 0 3px rgba(4, 170, 109, 0.2);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* 结果样式 - 统一绿色主题 */
+        .result {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 22px;
+            font-weight: 600;
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(to right, #e8f5e9, #c8e6c9);
+            border-radius: 8px;
+            border-left: 4px solid #04aa6d;
+        }
+
+        /* 材质生成器特殊样式 - 统一颜色 */
+        #materialOutput {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #e0e7ff;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            background-color: #f8f9ff;
+            resize: vertical;
+            margin-top: 15px;
+        }
+
+        .material-controls {
+            text-align: center;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .material-btn {
+            background-color: #04aa6d;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .material-btn:hover {
+            background-color: #3e8e41;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(4, 170, 109, 0.4);
+        }
+
+        #copyBtn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .nav-container {
+                gap: 5px;
+            }
+            .nav-btn {
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+            .tool-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 导航栏 -->
+    <div class="navbar">
+        <h1>钢结构计算工具合集</h1>
+        <div class="nav-container" id="navContainer"></div>
+    </div>
+
+    <!-- 各个工具页面 -->
+    <!-- 坡屋面转换 -->
+    <div id="page-坡屋面转换" class="page">
+        <div class="tool-card">
+            <h1>坡屋面转换</h1>
+            <label>斜坡投影长度 (mm)</label>
+            <input type="text" placeholder="输入斜坡投影长度" id="坡屋面投影" onkeyup="calc坡屋面()">
+            
+            <label>坡度百分比 (%)</label>
+            <input type="text" placeholder="输入坡度百分比" id="坡屋面百分比" onkeyup="calc坡屋面()">
+            
+            <div style="margin: 20px 0; text-align: center; color: #666;">或</div>
+            
+            <label>高度 (mm)</label>
+            <input type="text" placeholder="输入高度" id="坡屋面高度" onkeyup="calc坡屋面()">
+            
+            <div class="result" id="坡屋面结果">请输入参数进行计算</div>
+        </div>
+    </div>
+
+    <!-- 材质生成器 -->
+    <div id="page-材质生成器" class="page">
+        <div class="tool-card">
+            <h1>TEKLA材质库生成器</h1>
+            <div class="material-controls">
+                <button class="material-btn" id="generateBtn" onclick="generateMaterial()">生成材质库</button>
+                <button class="material-btn" id="copyBtn" onclick="copyMaterial()" disabled>复制到剪贴板</button>
+            </div>
+            <textarea id="materialOutput" placeholder="点击"生成材质库"按钮将代码显示在这里..."></textarea>
+            <div style="text-align: center; color: #7f8c7d; margin-top: 10px; font-size: 14px;">
+                点击"生成材质库"按钮生成代码，然后点击"复制到剪贴板"按钮复制代码
+            </div>
+        </div>
+    </div>
+
+    <!-- 钢板重量 -->
+    <div id="page-钢板重量" class="page">
+        <div class="tool-card">
+            <h1>钢板重量计算</h1>
+            <label>厚度 (mm)</label>
+            <input type="text" placeholder="输入厚度" id="钢板厚" onkeyup="calc钢板()">
+            
+            <label>宽度 (mm)</label>
+            <input type="text" placeholder="输入宽度" id="钢板宽" onkeyup="calc钢板()">
+            
+            <label>长度 (mm)</label>
+            <input type="text" placeholder="输入长度" id="钢板长" onkeyup="calc钢板()">
+            
+            <label>数量</label>
+            <input type="text" placeholder="输入数量" id="钢板数量" value="1" onkeyup="calc钢板()">
+            
+            <div class="result" id="钢板结果">请输入参数进行计算</div>
+        </div>
+    </div>
+
+    <!-- 勾股定理求斜边 -->
+    <div id="page-勾股定理斜边" class="page">
+        <div class="tool-card">
+            <h1>勾股定理（求斜边）</h1>
+            <label>直角边1 (mm)</label>
+            <input type="text" placeholder="输入第一条直角边" id="勾股边1" onkeyup="calc斜边()">
+            
+            <label>直角边2 (mm)</label>
+            <input type="text" placeholder="输入第二条直角边" id="勾股边2" onkeyup="calc斜边()">
+            
+            <div class="result" id="斜边结果">请输入参数进行计算</div>
+        </div>
+    </div>
+
+    <!-- 勾股定理求直边 -->
+    <div id="page-勾股定理直边" class="page">
+        <div class="tool-card">
+            <h1>勾股定理（求直边）</h1>
+            <label>斜边长度 (mm)</label>
+            <input type="text" placeholder="输入斜边长度" id="勾股斜边" onkeyup="calc直边()">
+            
+            <label>已知直角边 (mm)</label>
+            <input type="text" placeholder="输入已知直角边" id="勾股已知边" onkeyup="calc直边()">
+            
+            <div class="result" id="直边结果">请输入参数进行计算</div>
+        </div>
+    </div>
+
+    <!-- 扁豆花纹钢板 -->
+    <div id="page-扁豆花纹钢板" class="page">
+        <div class="tool-card">
+            <h1>花纹钢板（扁豆型）重量计算</h1>
+            <label>厚度 (mm)</label>
+            <input type="text" placeholder="输入厚度 (2.5-8)" id="扁豆厚" onkeyup="calc扁豆()">
+            
+            <label>宽度 (mm)</label>
+            <input type="text" placeholder="输入宽度" id="扁豆宽" onkeyup="calc扁豆()">
+            
+            <label>长度 (mm)</label>
+            <input type="text" placeholder="输入长度" id="扁豆长" onkeyup="calc扁豆()">
+            
+            <label>数量</label>
+            <input type="text" placeholder="输入数量" id="扁豆数量" value="1" onkeyup="calc扁豆()">
+            
+            <div class="result" id="扁豆结果">请输入参数进行计算</div>
+        </div>
+    </div>
+
+    <!-- 菱形花纹钢板 -->
+    <div id="page-菱形花纹钢板" class="page">
+        <div class="tool-card">
+            <h1>花纹钢板（菱形）重量计算</h1>
+            <label>厚度 (mm)</label>
+            <input type="text" placeholder="输入厚度 (2.5-8)" id="菱形厚" onkeyup="calc菱形()">
+            
+            <label>宽度 (mm)</label>
+            <input type="text" placeholder="输入宽度" id="菱形宽" onkeyup="calc菱形()">
+            
+            <label>长度 (mm)</label>
+            <input type="text" placeholder="输入长度" id="菱形长" onkeyup="calc菱形()">
+            
+            <label>数量</label>
+            <input type="text" placeholder="输入数量" id="菱形数量" value="1" onkeyup="calc菱形()">
+            
+            <div class="result" id="菱形结果">请输入参数进行计算</div>
+        </div>
+    </div>
+
+    <!-- 板拼H型钢 -->
+    <div id="page-板拼H型钢" class="page">
+        <div class="tool-card">
+            <h1>板拼H型钢重量计算</h1>
+            <label>高度 (mm)</label>
+            <input type="text" placeholder="输入总高度" id="h型钢高" onkeyup="calcH型钢()">
+            
+            <label>宽度 (mm)</label>
+            <input type="text" placeholder="输入翼板宽度" id="h型钢宽" onkeyup="calcH型钢()">
+            
+            <label>腹板厚度 (mm)</label>
+            <input type="text" placeholder="输入腹板厚度" id="h型钢腹厚" onkeyup="calcH型钢()">
+            
+            <label>翼板厚度 (mm)</label>
+            <input type="text" placeholder="输入翼板厚度" id="h型钢翼厚" onkeyup="calcH型钢()">
+            
+            <label>长度 (mm)</label>
+            <input type="text" placeholder="输入长度" id="h型钢长" value="1000" onkeyup="calcH型钢()">
+            
+            <label>数量</label>
+            <input type="text" placeholder="输入数量" id="h型钢数量" value="1" onkeyup="calcH型钢()">
+            
+            <div class="result" id="h型钢结果">请输入参数进行计算</div>
+        </div>
+    </div>
+
+    <!-- 变截面H型钢 -->
+    <div id="page-变截面H型钢" class="page">
+        <div class="tool-card">
+            <h1>变截面H型钢重量计算</h1>
+            <label>大头高度 (mm)</label>
+            <input type="text" placeholder="输入大头高度" id="变截大头高" onkeyup="calc变截面()">
+            
+            <label>小头高度 (mm)</label>
+            <input type="text" placeholder="输入小头高度" id="变截小头高" onkeyup="calc变截面()">
+            
+            <label>宽度 (mm)</label>
+            <input type="text" placeholder="输入翼板宽度" id="变截宽" onkeyup="calc变截面()">
+            
+            <label>腹板厚度 (mm)</label>
+            <input type="text" placeholder="输入腹板厚度" id="变截腹厚" onkeyup="calc变截面()">
+            
+            <label>翼板厚度 (mm)</label>
+            <input type="text" placeholder="输入翼板厚度" id="变截翼厚" onkeyup="calc变截面()">
+            
+            <label>长度 (mm)</label>
+            <input type="text" placeholder="输入长度" id="变截长" value="1000" onkeyup="calc变截面()">
+            
+            <label>数量</label>
+            <input type="text" placeholder="输入数量" id="变截数量" value="1" onkeyup="calc变截面()">
+            
+            <div class="result" id="变截结果">请输入参数进行计算</div>
+        </div>
+    </div>
+
+    <script>
+        // 页面切换功能
+        const pages = [
+            { id: '坡屋面转换', name: '坡屋面转换' },
+            { id: '材质生成器', name: 'TEKLA材质' },
+            { id: '钢板重量', name: '钢板重量' },
+            { id: '勾股定理斜边', name: '勾股定理(斜边)' },
+            { id: '勾股定理直边', name: '勾股定理(直边)' },
+            { id: '扁豆花纹钢板', name: '扁豆花纹钢' },
+            { id: '菱形花纹钢板', name: '菱形花纹钢' },
+            { id: '板拼H型钢', name: '板拼H型钢' },
+            { id: '变截面H型钢', name: '变截面H型钢' }
+        ];
+
+        function initNavigation() {
+            const container = document.getElementById('navContainer');
+            pages.forEach(page => {
+                const btn = document.createElement('button');
+                btn.className = 'nav-btn';
+                btn.textContent = page.name;
+                btn.onclick = () => showPage(page.id);
+                container.appendChild(btn);
+            });
+        }
+
+        function showPage(pageName) {
+            const pageElements = document.querySelectorAll('.page');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            
+            pageElements.forEach(page => page.classList.remove('active'));
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById('page-' + pageName).classList.add('active');
+            
+            const currentBtn = Array.from(navButtons).find(btn => 
+                btn.textContent === pages.find(p => p.id === pageName).name
+            );
+            if (currentBtn) currentBtn.classList.add('active');
+        }
+
+        // 初始化显示第一个工具
+        initNavigation();
+        showPage('坡屋面转换');
+
+        // 坡屋面转换计算
+        function calc坡屋面() {
+            const 投影 = Number(document.getElementById('坡屋面投影').value);
+            const 百分比 = Number(document.getElementById('坡屋面百分比').value);
+            const 高度 = Number(document.getElementById('坡屋面高度').value);
+            
+            const 结果 = document.getElementById('坡屋面结果');
+            
+            if (百分比 > 0 && 高度 === 0) {
+                const 计算高度 = 投影 * (百分比 / 100);
+                结果.innerHTML = `高度为：${计算高度.toFixed(2)} mm`;
+            } else if (高度 > 0 && 百分比 === 0) {
+                const 计算百分比 = (高度 / 投影) * 100;
+                结果.innerHTML = `坡度比：${计算百分比.toFixed(2)}%`;
+            } else if (百分比 > 0 && 高度 > 0) {
+                结果.innerHTML = '请只输入百分比或高度其中一项';
+            } else {
+                结果.innerHTML = '请输入参数进行计算';
+            }
+        }
+
+        // 钢板重量计算
+        function calc钢板() {
+            const 厚 = Number(document.getElementById('钢板厚').value);
+            const 宽 = Number(document.getElementById('钢板宽').value);
+            const 长 = Number(document.getElementById('钢板长').value);
+            const 数量 = Number(document.getElementById('钢板数量').value) || 1;
+            
+            if (厚 && 宽 && 长) {
+                const 重量 = 厚 * 宽 * 长 * 数量 * 7.85 / 1000000;
+                document.getElementById('钢板结果').innerHTML = `${重量.toFixed(2)} kg`;
+            } else {
+                document.getElementById('钢板结果').innerHTML = '请输入完整参数';
+            }
+        }
+
+        // 勾股定理求斜边
+        function calc斜边() {
+            const 边1 = Number(document.getElementById('勾股边1').value);
+            const 边2 = Number(document.getElementById('勾股边2').value);
+            
+            if (边1 > 0 && 边2 > 0) {
+                const 斜边 = Math.sqrt(边1 * 边1 + 边2 * 边2);
+                document.getElementById('斜边结果').innerHTML = `${斜边.toFixed(2)} mm`;
+            } else {
+                document.getElementById('斜边结果').innerHTML = '请输入两条直角边';
+            }
+        }
+
+        // 勾股定理求直边
+        function calc直边() {
+            const 斜边 = Number(document.getElementById('勾股斜边').value);
+            const 已知边 = Number(document.getElementById('勾股已知边').value);
+            
+            if (斜边 > 0 && 已知边 > 0 && 已知边 < 斜边) {
+                const 直边 = Math.sqrt(斜边 * 斜边 - 已知边 * 已知边);
+                document.getElementById('直边结果').innerHTML = `${直边.toFixed(2)} mm`;
+            } else {
+                document.getElementById('直边结果').innerHTML = '请输入正确参数（斜边>直角边）';
+            }
+        }
+
+        // 扁豆花纹钢板计算
+        function calc扁豆() {
+            const 厚 = Number(document.getElementById('扁豆厚').value);
+            const 宽 = Number(document.getElementById('扁豆宽').value);
+            const 长 = Number(document.getElementById('扁豆长').value);
+            const 数量 = Number(document.getElementById('扁豆数量').value) || 1;
+            
+            const 结果 = document.getElementById('扁豆结果');
+            
+            const 单位重量表 = {
+                2.5: 21.3, 3: 24.4, 3.5: 28.4, 4: 32.4, 4.5: 36.4,
+                5: 40.5, 5.5: 44.3, 6: 48.4, 7: 52.6, 8: 56.4
+            };
+            
+            if (单位重量表[厚] && 宽 && 长) {
+                const 重量 = 单位重量表[厚] * 宽 * 长 / 1000000 * 数量;
+                结果.innerHTML = `${重量.toFixed(2)} kg`;
+            } else if (厚 && 宽 && 长) {
+                结果.innerHTML = '厚度超出范围（2.5-8mm）';
+            } else {
+                结果.innerHTML = '请输入完整参数';
+            }
+        }
+
+        // 菱形花纹钢板计算
+        function calc菱形() {
+            const 厚 = Number(document.getElementById('菱形厚').value);
+            const 宽 = Number(document.getElementById('菱形宽').value);
+            const 长 = Number(document.getElementById('菱形长').value);
+            const 数量 = Number(document.getElementById('菱形数量').value) || 1;
+            
+            const 结果 = document.getElementById('菱形结果');
+            
+            const 单位重量表 = {
+                2.5: 21.6, 3: 25.6, 3.5: 29.5, 4: 33.4, 4.5: 37.3,
+                5: 42.3, 5.5: 46.2, 6: 50.1, 7: 59, 8: 66.8
+            };
+            
+            if (单位重量表[厚] && 宽 && 长) {
+                const 重量 = 单位重量表[厚] * 宽 * 长 / 1000000 * 数量;
+                结果.innerHTML = `${重量.toFixed(2)} kg`;
+            } else if (厚 && 宽 && 长) {
+                结果.innerHTML = '厚度超出范围（2.5-8mm）';
+            } else {
+                结果.innerHTML = '请输入完整参数';
+            }
+        }
+
+        // 板拼H型钢计算
+        function calcH型钢() {
+            const 高 = Number(document.getElementById('h型钢高').value);
+            const 宽 = Number(document.getElementById('h型钢宽').value);
+            const 腹厚 = Number(document.getElementById('h型钢腹厚').value);
+            const 翼厚 = Number(document.getElementById('h型钢翼厚').value);
+            const 长 = Number(document.getElementById('h型钢长').value) || 1000;
+            const 数量 = Number(document.getElementById('h型钢数量').value) || 1;
+            
+            if (高 && 宽 && 腹厚 && 翼厚) {
+                const 腹板高 = 高 - 2 * 翼厚;
+                const 腹板重 = 7.85 * 腹厚 * 腹板高 * 长 / 1000000;
+                const 翼板重 = 7.85 * 翼厚 * 宽 * 长 / 1000000 * 2;
+                const 总重 = (腹板重 + 翼板重) * 数量;
+                document.getElementById('h型钢结果').innerHTML = `${总重.toFixed(3)} kg`;
+            } else {
+                document.getElementById('h型钢结果').innerHTML = '请输入完整参数';
+            }
+        }
+
+        // 变截面H型钢计算
+        function calc变截面() {
+            const 大头高 = Number(document.getElementById('变截大头高').value);
+            const 小头高 = Number(document.getElementById('变截小头高').value);
+            const 宽 = Number(document.getElementById('变截宽').value);
+            const 腹厚 = Number(document.getElementById('变截腹厚').value);
+            const 翼厚 = Number(document.getElementById('变截翼厚').value);
+            const 长 = Number(document.getElementById('变截长').value) || 1000;
+            const 数量 = Number(document.getElementById('变截数量').value) || 1;
+            
+            if (大头高 && 小头高 && 宽 && 腹厚 && 翼厚) {
+                const 腹板重 = 7.85 * 腹厚 * (((大头高 - 2 * 翼厚) + (小头高 - 2 * 翼厚)) * 长 / 2) / 1000000;
+                const 下翼板重 = 7.85 * 翼厚 * 宽 * 长 / 1000000;
+                const 斜长 = Math.sqrt((大头高 - 小头高) * (大头高 - 小头高) + 长 * 长);
+                const 上翼板重 = 7.85 * 翼厚 * 宽 * 斜长 / 1000000;
+                const 总重 = (腹板重 + 下翼板重 + 上翼板重) * 数量;
+                document.getElementById('变截结果').innerHTML = `${总重.toFixed(3)} kg`;
+            } else {
+                document.getElementById('变截结果').innerHTML = '请输入完整参数';
+            }
+        }
+
+        // 材质生成器功能
+const materialData = `
+    MATERIAL DATABASE EXPORT VERSION = 1
+
+    MATERIAL_NAME = "09CuP"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "09CuPCrNi-A"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "09CuPCrNi-B"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "12MnCuCr"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "15MnCuCr"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "15MnCuCr-QT"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "16CuCr"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q235"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q235A"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q235B"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q235C"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q235D"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q295"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q345"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q345A"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q345B"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q345C"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q355B"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q390"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q420"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.059396E+006
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Q460"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Steel_Undefined"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  7.850000E+003
+        MODULUS_OF_ELASTICITY          2.100000E+011
+        POISSONS_RATIO                 3.000000E-004
+        THERMAL_DILATATION             1.200000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-2.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.520000E+003
+        PLATE_DENSITY                  8.520000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-3"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.133000E+003
+        PLATE_DENSITY                  8.133000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-3.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.114000E+003
+        PLATE_DENSITY                  8.114000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-4.0"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.100000E+003
+        PLATE_DENSITY                  8.100000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-4.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.089000E+003
+        PLATE_DENSITY                  8.089000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.100000E+003
+        PLATE_DENSITY                  8.100000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-5.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.055000E+003
+        PLATE_DENSITY                  8.055000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-6"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.067000E+003
+        PLATE_DENSITY                  8.067000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-7"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.514000E+003
+        PLATE_DENSITY                  7.514000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-扁豆-8"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.050000E+003
+        PLATE_DENSITY                  7.050000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-2.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.640000E+003
+        PLATE_DENSITY                  8.640000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-3"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.533000E+003
+        PLATE_DENSITY                  8.533000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-3.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.429000E+003
+        PLATE_DENSITY                  8.429000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-4"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.350000E+003
+        PLATE_DENSITY                  8.350000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-4.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.289000E+003
+        PLATE_DENSITY                  8.289000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.460000E+003
+        PLATE_DENSITY                  8.460000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-5.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.400000E+003
+        PLATE_DENSITY                  8.400000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-6"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.350000E+003
+        PLATE_DENSITY                  8.350000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-7"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.429000E+003
+        PLATE_DENSITY                  8.429000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-菱形-8"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.350000E+003
+        PLATE_DENSITY                  8.350000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-2.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.440000E+003
+        PLATE_DENSITY                  8.440000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-3"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.100000E+003
+        PLATE_DENSITY                  8.100000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-3.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.086000E+003
+        PLATE_DENSITY                  8.086000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-4.0"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.075000E+003
+        PLATE_DENSITY                  8.075000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-4.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.044000E+003
+        PLATE_DENSITY                  8.044000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.040000E+003
+        PLATE_DENSITY                  8.040000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-5.5"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.018000E+003
+        PLATE_DENSITY                  8.018000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-6"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                8.017000E+003
+        PLATE_DENSITY                  8.017000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-7"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.486000E+003
+        PLATE_DENSITY                  7.486000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "花纹钢-圆豆-8"; MATERIAL_TYPE = 1;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.025000E+003
+        PLATE_DENSITY                  7.025000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C15"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C20"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C25"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C30"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C35"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C40"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C45"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C50"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C55"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C60"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C65"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C70"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C75"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "C80"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.500000E+003
+        PLATE_DENSITY                  2.500000E+003
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Concrete_Undefined"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                2.400000E+003
+        PLATE_DENSITY                  2.400000E+003
+        MODULUS_OF_ELASTICITY          2.500000E+010
+        POISSONS_RATIO                 2.000000E-001
+        THERMAL_DILATATION             1.000000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Formwork_Undefined"; MATERIAL_TYPE = 2;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                6.000000E+002
+        PLATE_DENSITY                  6.000000E+002
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "HPB235"; MATERIAL_TYPE = 3;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  0.000000E+000
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "HRB335"; MATERIAL_TYPE = 3;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  0.000000E+000
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "HRB400"; MATERIAL_TYPE = 3;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  0.000000E+000
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "RRB400"; MATERIAL_TYPE = 3;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                7.850000E+003
+        PLATE_DENSITY                  0.000000E+000
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Timber_Undefined"; MATERIAL_TYPE = 5;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                6.000000E+002
+        PLATE_DENSITY                  6.000000E+002
+        MODULUS_OF_ELASTICITY          1.000000E+010
+        POISSONS_RATIO                 2.000000E-001
+        THERMAL_DILATATION             5.000000E-005
+        ACTIVE_DESIGN_CODE             0
+    };
+    
+    MATERIAL_NAME = "Miscellaneous_Undefined"; MATERIAL_TYPE = 6;
+    {
+        ALIAS_NAME1                    ""
+        ALIAS_NAME2                    ""
+        ALIAS_NAME3                    ""
+        PROFILE_DENSITY                0.000000E+000
+        PLATE_DENSITY                  0.000000E+000
+        MODULUS_OF_ELASTICITY          0.000000E+000
+        POISSONS_RATIO                 0.000000E+000
+        THERMAL_DILATATION             0.000000E+000
+        ACTIVE_DESIGN_CODE             0
+    };`;
+
+        // 获取元素
+        const generateBtn = document.getElementById('generateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const outputArea = document.getElementById('outputArea');
+
+        // 生成按钮点击事件
+        generateBtn.addEventListener('click', function() {
+            outputArea.value = materialData;
+            copyBtn.disabled = false;
+            // 可选：自动选中文本
+            outputArea.select();
+        });
+
+
+        function generateMaterial() {
+            const output = document.getElementById('materialOutput');
+            output.value = materialData;
+            document.getElementById('copyBtn').disabled = false;
+            output.select();
+        }
+
+        async function copyMaterial() {
+            const output = document.getElementById('materialOutput');
+            const btn = document.getElementById('copyBtn');
+            
+            try {
+                await navigator.clipboard.writeText(output.value);
+                const originalText = btn.textContent;
+                btn.textContent = '已复制!';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                alert('复制失败，请手动复制');
+            }
+        }
+    </script>
+</body>
+</html>
